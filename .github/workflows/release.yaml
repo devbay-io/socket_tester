@@ -1,0 +1,31 @@
+name: Dynamic hashing lb release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64]
+        exclude:
+          # windows/386 and darwin/386 seems useless
+          - goarch: "386"
+            goos: windows
+          - goarch: "386"
+            goos: darwin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build binaries for ${{ matrix.goos }} and ${{ matrix.goarch }}
+        uses: wangyoucao577/go-release-action@v1.16
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          project_path: "${{ env.CMD_PATH }}"
+          build_flags: -v
