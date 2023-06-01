@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pires/go-proxyproto"
+	"github.com/devbay-io/socket_tester/proxyprotocol"
 )
 
 var help = flag.Bool("help", false, "Show help")
@@ -28,37 +28,17 @@ func chkErr(err error) {
 	}
 }
 
-func prepareProxyProtocolHeader() *proxyproto.Header {
-	header := &proxyproto.Header{
-		Version:           2,
-		Command:           proxyproto.PROXY,
-		TransportProtocol: proxyproto.TCPv4,
-		SourceAddr: &net.TCPAddr{
-			IP:   net.ParseIP("10.0.0.0"),
-			Port: 1883,
-		},
-		DestinationAddr: &net.TCPAddr{
-			IP:   net.ParseIP("20.0.0.0"),
-			Port: 1883,
-		},
-	}
-	return header
-}
-
 func sendRecvTLSMessage(message string, host string, port int, proxyProtocol bool, customTimeoutMillis int) string {
 	addr := fmt.Sprintf("%v:%v", host, port)
 	cfg := tls.Config{
 		InsecureSkipVerify: sslSkipChecks,
 	}
-	conn, err := tls.Dial("tcp", addr, &cfg)
+	conn, err := proxyprotocol.Dial("tcp", addr, &cfg, proxyProtocol)
 	chkErr(err)
 	defer conn.Close()
 	// Create a proxyprotocol header or use HeaderProxyFromAddrs() if you
 	// have two conn's
-	if proxyProtocol {
-		_, err = prepareProxyProtocolHeader().WriteTo(conn)
-		chkErr(err)
-	}
+
 	_, err = io.WriteString(conn, fmt.Sprintf("%v\n", message))
 	chkErr(err)
 	reply := make([]byte, 256)
@@ -82,7 +62,7 @@ func sendRecvMessage(message string, host string, port int, proxyProtocol bool, 
 	// Create a proxyprotocol header or use HeaderProxyFromAddrs() if you
 	// have two conn's
 	if proxyProtocol {
-		_, err = prepareProxyProtocolHeader().WriteTo(conn)
+		_, err = proxyprotocol.PrepareProxyProtocolHeader().WriteTo(conn)
 		chkErr(err)
 	}
 	_, err = io.WriteString(conn, fmt.Sprintf("%v\n", message))
