@@ -29,6 +29,8 @@ You can also use the following optional flags:
 
 `-customTimeoutMillis` - Set the number of milliseconds before timing out the socket client
 
+`-sslEnabled` - Use ssl connection
+
 `-help` - Show the help menu
 
 For example, to connect to localhost on port 1234 and send the message "Hello, world!" with a custom timeout of 500 milliseconds, use the following command:
